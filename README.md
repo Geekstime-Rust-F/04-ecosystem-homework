@@ -5,6 +5,13 @@
 clone 下来，研究和运行其 examples
 2. 在充分学习视频之后，不看已写好的代码，重写以下内容：
     - 聊天服务器（4-10）
+        - client 连接：添加到全局状态
+            - 创建 peer
+            - 通知所有小伙伴
+        - client 断连：从全局状态删除
+            - 通知所有小伙伴
+        - client 发消息
+            - 广播
     - url shortener（4-12）
 3 (optional). 对于重写的 url shortener 重构并添加功能：
     - 使用 thiserror 进行错误处理（为你定义的 error 实现 IntoResponse）
