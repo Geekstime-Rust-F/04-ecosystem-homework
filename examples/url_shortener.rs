@@ -10,6 +10,7 @@ use axum::{
 };
 use serde::Deserialize;
 use sqlx::{prelude::FromRow, Pool, Postgres};
+use thiserror::Error;
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, Layer as _};
 
@@ -29,6 +30,12 @@ struct AppState {
 #[derive(Deserialize, Debug)]
 struct ShortenUrlRequest {
     url: String,
+}
+
+#[derive(Error, Debug)]
+enum UrlShortenerError {
+    #[error("Url not found")]
+    NotFound(#[from] sqlx::Error),
 }
 
 #[tokio::main]
@@ -69,16 +76,14 @@ async fn redirect_to_url(
     State(state): State<Arc<AppState>>,
     Path(id): Path<String>,
 ) -> impl IntoResponse {
-    let url = Url::get_url_by_id(&id, state.db_pool.clone())
-        .await
-        .unwrap();
-    let mut headers = HeaderMap::new();
+    let url = Url::get_url_by_id(&id, state.db_pool.clone()).await;
     match url {
-        Some(url) => {
+        Ok(url) => {
+            let mut headers = HeaderMap::new();
             headers.insert(LOCATION, url.parse().unwrap());
-            (StatusCode::FOUND, headers)
+            (StatusCode::FOUND, headers).into_response()
         }
-        None => (StatusCode::NOT_FOUND, headers),
+        Err(e) => e.into_response(),
     }
 }
 
@@ -106,11 +111,21 @@ impl Url {
         Ok(url.id)
     }
 
-    async fn get_url_by_id(id: &str, db: Pool<Postgres>) -> Result<Option<String>> {
-        let url: Option<Url> = sqlx::query_as("SELECT * FROM urls WHERE id = $1")
+    async fn get_url_by_id(id: &str, db: Pool<Postgres>) -> Result<String, UrlShortenerError> {
+        let url: Url = sqlx::query_as("SELECT * FROM urls WHERE id = $1")
             .bind(id)
-            .fetch_optional(&db)
+            .fetch_one(&db)
             .await?;
-        Ok(url.map(|url| url.url))
+        Ok(url.url)
+    }
+}
+
+impl IntoResponse for UrlShortenerError {
+    fn into_response(self) -> axum::response::Response {
+        let headers = HeaderMap::new();
+        match self {
+            UrlShortenerError::NotFound(_) => (StatusCode::NOT_FOUND, headers),
+        }
+        .into_response()
     }
 }

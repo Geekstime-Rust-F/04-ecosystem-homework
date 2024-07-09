@@ -7,6 +7,7 @@ license = "MIT"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+thiserror = "1.0.61"
 
 [dev-dependencies]
 tokio-util = { version = "0.7.11", features = ["codec"] }
@@ -20,3 +21,4 @@ axum = { version = "0.7.5", features = ["http2", "query", "tracing"] }
 sqlx = { version = "0.7.4", features = ["postgres", "runtime-tokio", "tls-rustls"] }
 nanoid = "0.4.0"
 serde = "1.0.204"
+thiserror = "1.0.61"
