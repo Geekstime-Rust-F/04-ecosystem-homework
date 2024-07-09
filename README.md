@@ -13,6 +13,27 @@ clone 下来，研究和运行其 examples
         - client 发消息
             - 广播
     - url shortener（4-12）
+        要求暴露两个api：
+        - POST http:localhost:9876/
+            - request body
+            ```json
+            {
+                "url": "http://www.google.com"
+            }
+            ```
+            - response body
+            ```json
+            {
+                "url": "http://localhost/abc123"
+            }
+            ```
+        - GET http:localhost:9876/abc123
+            要求redirect到 http://www.google.com
+        tasks:
+        - 暴露以上两个api
+        - 生成短链接的算法
+        - 保存短链接和原链接的映射
+        - 如果已经存在的url再次post, 返回已有的短链接
 3 (optional). 对于重写的 url shortener 重构并添加功能：
     - 使用 thiserror 进行错误处理（为你定义的 error 实现 IntoResponse）
     - 如果生成的 id 重复，而产生数据库错误，则重新生成一个 id，
