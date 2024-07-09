@@ -97,6 +97,18 @@ impl Url {
 
     async fn add_shortened_url(&self, db: Pool<Postgres>) -> Result<String> {
         let id = nanoid::nanoid!(6);
+
+        // if the id already exists, generate a new one
+        let mut id = id;
+        while (sqlx::query("SELECT * FROM urls WHERE id = $1")
+            .bind(&id)
+            .fetch_one(&db)
+            .await)
+            .is_ok()
+        {
+            id = nanoid::nanoid!(6);
+        }
+
         let url: Url = sqlx::query_as(
             r#"
             INSERT INTO urls (id, url)
